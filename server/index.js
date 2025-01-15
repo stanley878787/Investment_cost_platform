@@ -13,7 +13,6 @@ admin.initializeApp({
 
 // 取得 Firestore
 const db = admin.firestore();
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -22,41 +21,86 @@ app.use(express.json());
 const CRYPTO_COLLECTION = 'cryptos';
 
 /**
- * [C] 新增幣種資料
+ * [Upsert] 新增或更新幣種
  * POST /api/cryptos
- * body: { coin, costPrice, currentPrice }
+ * body: { coin, buyPrice, currentPrice, quantity, purchaseTime }
+ *
+ * - coin: 幣種名稱 (ex: "BTC")
+ * - buyPrice: 本次購買的「單次買入價格」
+ * - currentPrice: 當前幣價
+ * - quantity: 本次購買的數量
+ * - purchaseTime: 購買時間 (字串或日期)
  */
 app.post('/api/cryptos', async (req, res) => {
   try {
-    const { coin, averageCost, currentPrice, quantity } = req.body;
+    const { coin, buyPrice, currentPrice, quantity, purchaseTime } = req.body;
 
-    // 計算市值與利潤
-    const marketValue = currentPrice * quantity;
-    const profit = (currentPrice - averageCost) * quantity;
+    // 先查詢該 coin 是否已存在
+    const snapshot = await db
+      .collection(CRYPTO_COLLECTION)
+      .where('coin', '==', coin)
+      .limit(1)
+      .get();
 
-    // 新增資料到 Firestore
-    const docRef = await db.collection(CRYPTO_COLLECTION).add({
+    let docRef;
+    let oldData = null;
+
+    if (snapshot.empty) {
+      // [情況1] 沒有此幣種 → 建立新 document
+      docRef = db.collection(CRYPTO_COLLECTION).doc(); // 自動產生ID
+      oldData = {
+        coin,
+        averageCost: 0,
+        currentPrice: 0,
+        quantity: 0,
+        marketValue: 0,
+        profit: 0,
+        lastPurchaseTime: ''
+      };
+    } else {
+      // [情況2] 已存在 → 取第一筆 document
+      docRef = snapshot.docs[0].ref;
+      oldData = snapshot.docs[0].data();
+    }
+
+    const oldQuantity = oldData.quantity || 0;
+    const oldAverageCost = oldData.averageCost || 0;
+
+    // 新的總數量 = 舊數量 + 這次買入的數量
+    const newQuantity = oldQuantity + quantity;
+
+    // 如果是第一次買 (新建)
+    // oldQuantity 可能是 0，此時 averageCost = buyPrice
+    // 如果不是第一次，則做加權平均
+    let newAverageCost = 0;
+    if (oldQuantity === 0) {
+      newAverageCost = buyPrice;
+    } else {
+      newAverageCost =
+        (oldAverageCost * oldQuantity + buyPrice * quantity) / newQuantity;
+    }
+
+    // marketValue & profit
+    const newMarketValue = currentPrice * newQuantity;
+    const newProfit = (currentPrice - newAverageCost) * newQuantity;
+
+    const updateData = {
       coin,
-      averageCost,
+      averageCost: newAverageCost,
       currentPrice,
-      quantity,
-      marketValue,
-      profit
-    });
+      quantity: newQuantity,
+      marketValue: newMarketValue,
+      profit: newProfit,
+      lastPurchaseTime: purchaseTime
+    };
 
-    res.status(201).json({
-      id: docRef.id,
-      coin,
-      averageCost,
-      currentPrice,
-      quantity,
-      marketValue,
-      profit  
-    });
+    // 寫入 Firestore (若是新 doc 就 create，若已有 doc 就 update)
+    await docRef.set(updateData);
+
+    res.status(200).json({ id: docRef.id, ...updateData });
   } catch (error) {
+    console.error('upsert error:', error);
     res.status(500).json({ error: error.message });
-    console.error('Firestore error:', error);
-    console.log("8787")
   }
 });
 
