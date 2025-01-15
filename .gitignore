@@ -1,5 +1,12 @@
-node_modules/
-.env
-dist/
 build/
-serviceAccountKey.json
+
+# === Node Modules ===
+client/crypto-client/node_modules/
+server/node_modules/
+
+# === Build Output ===
+client/crypto-client/dist/
+
+# === Environment / Secrets ===
+server/.env
+server/serviceAccountKey.json
