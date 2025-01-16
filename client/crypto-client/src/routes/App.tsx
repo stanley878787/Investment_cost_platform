@@ -18,8 +18,10 @@ function App() {
             </PrivateRoute>
           } 
         />
-        {/* 根路徑可預設到登入頁或其他 */}
+        {/* 根路徑預設到登入頁 */}
         <Route path="/" element={<LoginPage />} />
+        {/* 可選：處理 404 */}
+        <Route path="*" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
   );

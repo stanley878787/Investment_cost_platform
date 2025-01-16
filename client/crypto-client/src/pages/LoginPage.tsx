@@ -1,3 +1,4 @@
+// src/pages/LoginPage.tsx
 import React from 'react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../firebase';

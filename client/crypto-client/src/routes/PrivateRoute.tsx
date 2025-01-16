@@ -1,20 +1,35 @@
-// src/components/PrivateRoute.tsx (或 src/routes/PrivateRoute.tsx)
-import React from 'react';
+// src/routes/PrivateRoute.tsx
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { auth } from '../firebase'; // 你的 firebase 初始化檔案
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface PrivateRouteProps {
   children: JSX.Element;
 }
 
 function PrivateRoute({ children }: PrivateRouteProps) {
-  // 簡易寫法：判斷目前是否登入 (auth.currentUser)
-  // 若尚未登入，導回 /login
-  if (!auth.currentUser) {
-    return <Navigate to="/login" replace />;
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>; // 或其他載入畫面
   }
-  // 若已登入，直接呈現子元件
-  return children;
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 export default PrivateRoute;

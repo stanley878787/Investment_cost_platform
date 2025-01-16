@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const path = require('path');
+const authMiddleware = require('./authMiddleware');
 
 // 載入 Service Account Key (Firebase Admin)
 const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
@@ -31,8 +32,9 @@ const CRYPTO_COLLECTION = 'cryptos';
  * - quantity: 本次購買的數量
  * - purchaseTime: 購買時間 (字串或日期)
  */
-app.post('/api/cryptos', async (req, res) => {
+app.post('/api/cryptos', authMiddleware, async (req, res) => {
   try {
+    const userId = req.user.uid;  // 從驗證中取得使用者UID
     const { coin, buyPrice, currentPrice, quantity, purchaseTime } = req.body;
 
     // 先查詢該 coin 是否已存在
@@ -85,6 +87,7 @@ app.post('/api/cryptos', async (req, res) => {
     const newProfit = (currentPrice - newAverageCost) * newQuantity;
 
     const updateData = {
+      userId,
       coin,
       averageCost: newAverageCost,
       currentPrice,
@@ -109,15 +112,22 @@ app.post('/api/cryptos', async (req, res) => {
  * [R] 讀取所有幣種
  * GET /api/cryptos
  */
-app.get('/api/cryptos', async (req, res) => {
+app.get('/api/cryptos', authMiddleware, async (req, res) => {
   try {
-    const snapshot = await db.collection(CRYPTO_COLLECTION).get();
+    const userId = req.user.uid;
+    const snapshot = await db
+      .collection(CRYPTO_COLLECTION)
+      .where('userId', '==', userId)
+      .get();
+
     const cryptos = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
     res.json(cryptos);
   } catch (error) {
+    console.error('Fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 });
