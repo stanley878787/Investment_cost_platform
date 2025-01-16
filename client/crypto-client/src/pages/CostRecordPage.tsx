@@ -3,7 +3,6 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// Firestore document 介面 (TypeScript寫法，可視需求改jsx)
 interface CryptoData {
   id: string;
   coin: string;
@@ -22,10 +21,10 @@ function CostRecordPage() {
 
   const [formData, setFormData] = useState({
     coin: '',
-    buyPrice: '',       // 單次購買價格
+    buyPrice: '',
     currentPrice: '',
     quantity: '',
-    purchaseTime: ''     // 字串, 也可用日期
+    purchaseTime: ''
   });
 
   useEffect(() => {
@@ -41,7 +40,6 @@ function CostRecordPage() {
     }
   };
 
-  // 新增
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -57,7 +55,6 @@ function CostRecordPage() {
         purchaseTime: formData.purchaseTime
       });
 
-      // 清空
       setFormData({
         coin: '',
         buyPrice: '',
@@ -66,14 +63,12 @@ function CostRecordPage() {
         purchaseTime: ''
       });
 
-      // 重新抓取
       fetchCryptos();
     } catch (error) {
       console.error(error);
     }
   };
 
-  // 刪除
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     try {
@@ -84,7 +79,6 @@ function CostRecordPage() {
     }
   };
 
-  // 修改 (範例: 只修改 currentPrice)
   const handleEdit = async (crypto: CryptoData) => {
     const newCurrentPrice = prompt(`請輸入 ${crypto.coin} 新的價格:`, String(crypto.currentPrice));
     if (!newCurrentPrice) return;
@@ -97,6 +91,15 @@ function CostRecordPage() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  // 取得東8區的當前時間
+  const getCurrentDateInTimezone = () => {
+    const currentDate = new Date();
+    const currentOffset = currentDate.getTimezoneOffset();
+    const offsetInMilliseconds = 8 * 60 * 60 * 1000; // 東8區 offset
+    currentDate.setTime(currentDate.getTime() + (offsetInMilliseconds + currentOffset * 60000));
+    return currentDate;
   };
 
   return (
@@ -137,39 +140,30 @@ function CostRecordPage() {
           />
         </div>
         <div>
-          <label>購買時間：</label>
+          <label>購買日期：</label>
           <DatePicker
-            // 當前選擇的日期
             selected={purchaseDate}
-            // 使用者選日期時觸發
             onChange={(date) => {
-              // date 可能是 null (使用者清空) 或 Date 物件
               if (date) {
                 setPurchaseDate(date);
 
-                // 若後端預期字串格式，示範把 Date 轉成 'YYYY-MM-DD HH:mm'
                 const yyyy = date.getFullYear();
                 const mm = String(date.getMonth() + 1).padStart(2, '0');
                 const dd = String(date.getDate()).padStart(2, '0');
-                const hh = String(date.getHours()).padStart(2, '0');
-                const min = String(date.getMinutes()).padStart(2, '0');
-                const dateString = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+                const dateString = `${yyyy}-${mm}-${dd}`;
 
                 setFormData({
                   ...formData,
                   purchaseTime: dateString
                 });
               } else {
-                // 若使用者清空
                 setPurchaseDate(null);
                 setFormData({ ...formData, purchaseTime: '' });
               }
             }}
-            // 顯示日期+時間
-            showTimeSelect
-            timeIntervals={15} // 時間間隔 15 分鐘
-            dateFormat="yyyy-MM-dd HH:mm"
-            placeholderText="選擇日期與時間"
+            dateFormat="yyyy-MM-dd"
+            placeholderText="選擇日期"
+            maxDate={getCurrentDateInTimezone()}
           />
         </div>
         <button type="submit">新增/更新</button>
