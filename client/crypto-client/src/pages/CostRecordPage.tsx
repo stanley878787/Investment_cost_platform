@@ -15,7 +15,7 @@ interface CryptoData {
   lastPurchaseTime: string;
 }
 
-function App() {
+function CostRecordPage() {
   const [cryptos, setCryptos] = useState<CryptoData[]>([]);
 
   const [purchaseDate, setPurchaseDate] = useState<Date | null>(null);
@@ -210,4 +210,4 @@ function App() {
   );
 }
 
-export default App;
+export default CostRecordPage;
