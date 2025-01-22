@@ -15,6 +15,14 @@ interface CryptoData {
   lastPurchaseTime: string;
 }
 
+// 下拉選單可選幣種
+const coinOptions = [
+  { label: 'Bitcoin (BTC)', value: 'BTC' },
+  { label: 'Ethereum (ETH)', value: 'ETH' },
+  { label: 'Dogecoin (DOGE)', value: 'DOGE' },
+  { label: 'Binance Coin (BNB)', value: 'BNB' },
+];
+
 function CostRecordPage() {
   const [cryptos, setCryptos] = useState<CryptoData[]>([]);
 
@@ -41,17 +49,29 @@ function CostRecordPage() {
     }
   };
 
+  // 一次更新所有幣種的現在價格
+  const handleRefreshAll = async () => {
+    try {
+      // 呼叫 PUT /api/cryptos/refresh
+      await axios.put('/cryptos/refresh');
+      // 再次抓取最新資料
+      fetchCryptos();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const buyPriceNum = parseFloat(formData.buyPrice);
-      const currentPriceNum = parseFloat(formData.currentPrice);
+      // const currentPriceNum = parseFloat(formData.currentPrice);
       const quantityNum = parseFloat(formData.quantity);
 
       await axios.post('http://localhost:5000/api/cryptos', {
         coin: formData.coin,
         buyPrice: buyPriceNum,
-        currentPrice: currentPriceNum,
+        // currentPrice: currentPriceNum,
         quantity: quantityNum,
         purchaseTime: formData.purchaseTime
       });
@@ -107,14 +127,29 @@ function CostRecordPage() {
     <div style={{ margin: '40px auto', maxWidth: 600 }}>
       <h1>加密貨幣成本紀錄</h1>
 
+      <button onClick={handleRefreshAll} style={{ marginBottom: '10px' }}>
+        刷新所有幣種價格
+      </button>
+
       <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
         <div>
           <label>幣種：</label>
-          <input
+          <select
+            value={formData.coin}
+            onChange={(e) => setFormData({ ...formData, coin: e.target.value })}
+          >
+            <option value ="">-- 請選擇 --</option>
+            {coinOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          {/* <input
             type="text"
             value={formData.coin}
             onChange={(e) => setFormData({ ...formData, coin: e.target.value })}
-          />
+          /> */}
         </div>
         <div>
           <label>購買成本 (單次)：</label>
@@ -124,14 +159,14 @@ function CostRecordPage() {
             onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
           />
         </div>
-        <div>
+        {/* <div>
           <label>現在價格：</label>
           <input
             type="number"
             value={formData.currentPrice}
             onChange={(e) => setFormData({ ...formData, currentPrice: e.target.value })}
           />
-        </div>
+        </div> */}
         <div>
           <label>購買數量：</label>
           <input
@@ -187,11 +222,11 @@ function CostRecordPage() {
           {cryptos.map((item) => (
             <tr key={item.id}>
               <td>{item.coin}</td>
-              <td>{item.averageCost}</td>
+              <td>{item.averageCost.toFixed(2)}</td>
               <td>{item.currentPrice}</td>
-              <td>{item.quantity}</td>
-              <td>{item.marketValue}</td>
-              <td>{item.profit}</td>
+              <td>{item.quantity}</td>  
+              <td>{item.marketValue.toFixed(2)}</td>
+              <td>{item.profit.toFixed(2)}</td>
               <td>{item.lastPurchaseTime}</td>
               <td>
                 <button onClick={() => handleEdit(item)}>修改</button>
