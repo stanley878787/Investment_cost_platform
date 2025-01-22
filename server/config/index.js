@@ -7,7 +7,7 @@ const admin = require('firebase-admin');
 
 // 載入 service account
 // const serviceAccount = require(path.join(__dirname, 'config', 'serviceAccountKey.json'));
-const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
 
 
 // 初始化 Firebase Admin
@@ -18,7 +18,7 @@ admin.initializeApp({
 const app = express();
 app.use(cors());
 app.use(express.json());
-  
+
 // 載入加密貨幣路由
 const cryptoRoutes = require('../routes/cryptoRoutes');
 

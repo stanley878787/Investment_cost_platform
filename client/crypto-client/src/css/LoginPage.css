@@ -1,0 +1,54 @@
+/* CSS for the login page */
+.img.js-fullheight {
+    height: 100vh;
+    width: 100vw;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.ftco-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* .login-wrap {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+} */
+
+.heading-section {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    color: #333;
+}
+
+.btn-google {
+    background: #db4437;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.btn-google:hover {
+    background: #c33d2d;
+}
+
+.field-icon {
+    float: right;
+    margin-right: 10px;
+    margin-top: -30px;
+    position: relative;
+    cursor: pointer;
+}
+
+.mask{
+    background-color: rgba(0,0,0,0.5);
+    height: 100vh;
+}
