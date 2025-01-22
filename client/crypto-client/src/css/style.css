@@ -31,7 +31,7 @@
   --breakpoint-md: 768px;
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "unicons";
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
 *,
@@ -8267,7 +8267,6 @@ textarea.form-control {
 .checkbox-wrap {
   display: block;
   position: relative;
-  padding-left: 30px;
   margin-bottom: 12px;
   cursor: pointer;
   font-size: 16px;
@@ -8327,7 +8326,7 @@ textarea.form-control {
   -webkit-box-shadow: none !important;
   box-shadow: none !important;
   font-size: 15px;
-  text-transform: uppercase; }
+}
   .btn:hover, .btn:active, .btn:focus {
     outline: none; }
   .btn.btn-primary {
