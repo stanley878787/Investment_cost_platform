@@ -145,7 +145,33 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
 // [DELETE] 刪除特定幣種
 router.delete('/:id', authMiddleware, async (req, res) => {
-  // ...
+  try {
+    const userId = req.user.uid; // 從 authMiddleware 取得使用者 ID
+    const { id } = req.params;   // 前端帶來的文件ID
+
+     // 取得文件參照
+     const docRef = db.collection(CRYPTO_COLLECTION).doc(id);
+     const docSnap = await docRef.get();
+     if (!docSnap.exists) {
+       // 找不到該文件 => 404
+       return res.status(404).json({ error: 'Document not found' });
+     }
+
+     // 檢查 document.userId 是否與當前使用者相符
+    const data = docSnap.data();
+    if (data.userId !== userId) {
+      // 不允許刪除他人紀錄 => 403
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // 若文件存在且 userId 符合 => 刪除
+    await docRef.delete();
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('DELETE /api/cryptos/:id error:', error);
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;

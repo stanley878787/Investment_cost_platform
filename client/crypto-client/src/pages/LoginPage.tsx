@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
-import React from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import React, { useState } from 'react';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword , setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,8 +25,65 @@ function LoginPage() {
     }
   };
 
+  const [registerData, setRegisterData] = useState({
+    nickname: '',
+    email: '',
+    password: ''
+  })
+
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const handleEmailSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try{
+      const { email, password } = registerData;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('註冊成功', userCredential.user);
+
+      navigate('/cost'); //導向cost頁面
+    } catch (err) {
+      console.error('email註冊失敗', err);
+      alert('註冊失敗: ' + (err as Error).message);
+    }
+  }
+
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  })
+
+  const handleEmailSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try{
+      if (rememberMe){
+        await setPersistence(auth, browserLocalPersistence)
+      } else {
+        await setPersistence(auth, browserSessionPersistence)
+      }
+      const userCredential = await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
+      console.log('Enmail登入成功:', userCredential.user);
+      navigate('/cost');
+    } catch (err){
+      console.error('Email登入失敗', err);
+      alert('登入失敗: ' + (err as Error).message);
+    }
+  }
+
+  // 忘記密碼
+  const handleForgotPassword = async () => {
+    const email = prompt('請輸入Email');
+    if(!email) return;
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('已寄送重設密碼連結到: ' + email);
+    } catch (error) {
+      alert('發送失敗: ' + (error as Error).message);
+    }
+  }
+
   return (
-    <div className="img js-fullheight aaa" style={{ backgroundImage: `url(${bgImage})` }}>
+    <div className="img js-fullheight" style={{ backgroundImage: `url(${bgImage})` }}>
       <div className="mask">
         <section className="ftco-section">
           <div className="container">
@@ -48,12 +105,12 @@ function LoginPage() {
                         <div className="center-wrap">
                           <div className="section text-center">
                             <h4 className="mb-4 pb-3" style={{ color: '#fff' }}>登入</h4>
-                            <form className="signin-form">
+                            <form className="signin-form" onSubmit={handleEmailSignIn}>
                               <div className="form-group">
-                                <input type="text" className="form-control" placeholder="您的姓名" required />
+                                <input type="text" className="form-control" placeholder="您的電子郵件" required value={loginData.email} onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}/>
                               </div>
                               <div className="form-group">
-                                <input type="password" className="form-control" placeholder="您的密碼" required />
+                                <input type="password" className="form-control" placeholder="您的密碼" required value={loginData.password} onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}/>
                               </div>
                               <div className="form-group">
                                 <button type="submit" className="form-control btn btn-primary submit px-3">登入</button>
@@ -62,12 +119,12 @@ function LoginPage() {
                                 <div className="w-50">
                                   <label className="checkbox-wrap checkbox-primary">
                                     記住密碼
-                                    <input type="checkbox" defaultChecked />
+                                    <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} defaultChecked />
                                     <span className="checkmark"></span>
                                   </label>
                                 </div>
                                 <div className="w-50 text-md-right">
-                                  <a href="#" style={{ color: '#fff' }}>忘記密碼?</a>
+                                  <a onClick={handleForgotPassword} style={{ color: '#fff' }}>忘記密碼?</a>
                                 </div>
                               </div>
                             </form>
@@ -78,9 +135,9 @@ function LoginPage() {
                           <a onClick={handleGoogleSignIn} className="px-2 py-2 mr-md-1 rounded btn btn-google">
                             <span className="fa fa-google mr-2"></span> Google
                           </a>
-                          <a href="#" className="px-2 py-2 ml-md-1 rounded">
+                          {/* <a href="#" className="px-2 py-2 ml-md-1 rounded">
                             <span className="ion-logo-twitter mr-2"></span> Twitter
-                          </a>
+                          </a> */}
                         </div>
                       </div>
                       {/* 註冊 Page */}
@@ -88,15 +145,15 @@ function LoginPage() {
                         <div className="center-wrap">
                           <div className="section text-center">
                             <h4 className="mb-4 pb-3" style={{ color: '#fff' }}>註冊</h4>
-                            <form className="signup-form">
+                            <form className="signup-form" onSubmit={handleEmailSignUp}>
                               <div className="form-group">
-                                <input type="text" className="form-control" placeholder="您的姓名" required />
+                                <input type="text" className="form-control" placeholder="您的暱稱" required value={registerData.nickname} onChange={(e) => setRegisterData({ ...registerData, nickname: e.target.value })}/>
                               </div>
                               <div className="form-group">
-                                <input type="email" className="form-control" placeholder="您的電子郵件" required />
+                                <input type="email" className="form-control" placeholder="您的電子郵件" required value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} />
                               </div>
                               <div className="form-group">
-                                <input type="password" className="form-control" placeholder="您的密碼" required />
+                                <input type="password" className="form-control" placeholder="您的密碼" required value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}/>
                               </div>
                               <div className="form-group">
                                 <button type="submit" className="form-control btn btn-primary submit px-3">註冊</button>
@@ -109,9 +166,9 @@ function LoginPage() {
                           <a onClick={handleGoogleSignIn} className="px-2 py-2 mr-md-1 rounded btn btn-google">
                             <span className="fa fa-google mr-2"></span> Google
                           </a>
-                          <a href="#" className="px-2 py-2 ml-md-1 rounded">
+                          {/* <a href="#" className="px-2 py-2 ml-md-1 rounded">
                             <span className="ion-logo-twitter mr-2"></span> Twitter
-                          </a>
+                          </a> */}
                         </div>
                       </div>
                     </div>
